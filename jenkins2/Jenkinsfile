@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven-3.9'
+    }
+
+    environment {
+        SONAR_QUBE_URL = "http://sonarqube:9000"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                script {
+                    // Build and test all modules
+                    sh 'mvn clean install -DskipTests=false'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube-server') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
